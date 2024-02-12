@@ -118,7 +118,9 @@ const Config: FC = () => {
     textToSpeech: textToSpeechConfig.enabled,
     setTextToSpeech: (value) => {
       setTextToSpeechConfig(produce(textToSpeechConfig, (draft: TextToSpeechConfig) => {
-        draft.enabled = value
+        draft.enabled = value || textToSpeechConfig.enabled
+        draft.voice = textToSpeechConfig.voice
+        draft.language = textToSpeechConfig.language
       }))
     },
     citation: citationConfig.enabled,
@@ -245,6 +247,7 @@ const Config: FC = () => {
         {(isAgent && isChatApp) && (
           <AgentTools />
         )}
+
         <ConfigVision />
 
         {/* Chat History */}
