@@ -397,8 +397,7 @@ class AssistantCotApplicationRunner(BaseAssistantApplicationRunner):
 
                 if code_block_delimiter_count == 3:
                     if in_code_block:
-                        for k in extra_json_from_code_block(code_block_cache):
-                            yield k
+                        yield from extra_json_from_code_block(code_block_cache)
                         code_block_cache = ''
                         
                     in_code_block = not in_code_block
