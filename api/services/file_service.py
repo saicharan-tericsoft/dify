@@ -1,21 +1,18 @@
 import datetime
 import hashlib
 import uuid
-from collections.abc import Generator
-from typing import Union
-
-from flask import current_app
-from flask_login import current_user
-from werkzeug.datastructures import FileStorage
-from werkzeug.exceptions import NotFound
-
-from core.data_loader.file_extractor import FileExtractor
+from typing import Generator, Tuple, Union
 from core.file.upload_file_parser import UploadFileParser
+from core.rag.extractor.extract_processor import ExtractProcessor
 from extensions.ext_database import db
 from extensions.ext_storage import storage
 from models.account import Account
 from models.model import EndUser, UploadFile
 from services.errors.file import FileTooLargeError, UnsupportedFileTypeError
+from flask import current_app
+from flask_login import current_user
+from werkzeug.datastructures import FileStorage
+from werkzeug.exceptions import NotFound
 
 IMAGE_EXTENSIONS = ['jpg', 'jpeg', 'png', 'webp', 'gif', 'svg']
 IMAGE_EXTENSIONS.extend([ext.upper() for ext in IMAGE_EXTENSIONS])
@@ -136,7 +133,7 @@ class FileService:
         if extension.lower() not in allowed_extensions:
             raise UnsupportedFileTypeError()
 
-        text = FileExtractor.load(upload_file, return_text=True)
+        text = ExtractProcessor.load_from_upload_file(upload_file, return_text=True)
         text = text[0:PREVIEW_WORDS_LIMIT] if text else ''
 
         return text
@@ -164,7 +161,7 @@ class FileService:
         return generator, upload_file.mime_type
     
     @staticmethod
-    def get_public_image_preview(file_id: str) -> str:
+    def get_public_image_preview(file_id: str) -> Tuple[Generator, str]:
         upload_file = db.session.query(UploadFile) \
             .filter(UploadFile.id == file_id) \
             .first()
