@@ -45,6 +45,7 @@ const Header = () => {
   }, [selectedSegment])
   return (
     <div className='flex flex-1 items-center justify-between px-4'>
+      SADFSADF
       <div className='flex items-center'>
         {isMobile && <div
           className='flex items-center justify-center h-8 w-8 cursor-pointer'

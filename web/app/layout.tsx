@@ -43,6 +43,7 @@ const LocaleLayout = ({
         data-public-maintenance-notice={process.env.NEXT_PUBLIC_MAINTENANCE_NOTICE}
         data-public-site-about={process.env.NEXT_PUBLIC_SITE_ABOUT}
       >
+      dasDASDASD
         <Topbar/>
         <BrowerInitor>
           <SentryInitor>
