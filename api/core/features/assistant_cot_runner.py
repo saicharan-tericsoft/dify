@@ -12,6 +12,7 @@ from core.model_runtime.entities.message_entities import (
     PromptMessage,
     PromptMessageTool,
     SystemPromptMessage,
+    ToolPromptMessage,
     UserPromptMessage,
 )
 from core.model_runtime.utils.encoders import jsonable_encoder
@@ -39,6 +40,7 @@ class AssistantCotApplicationRunner(BaseAssistantApplicationRunner):
         self._repack_app_orchestration_config(app_orchestration_config)
 
         agent_scratchpad: list[AgentScratchpadUnit] = []
+        self._init_agent_scratchpad(agent_scratchpad, self.history_prompt_messages)
 
         # check model mode
         if self.app_orchestration_config.model_config.mode == "completion":
@@ -357,10 +359,10 @@ class AssistantCotApplicationRunner(BaseAssistantApplicationRunner):
             except:
                 return json_str
             
-        def extra_json_from_code_block(code_block) -> Union[dict, str]:
+        def extra_json_from_code_block(code_block) -> Generator[Union[dict, str], None, None]:
             code_blocks = re.findall(r'```(.*?)```', code_block, re.DOTALL)
             if not code_blocks:
-                return []
+                return
             for block in code_blocks:
                 json_text = re.sub(r'^[a-zA-Z]+\n', '', block.strip(), flags=re.MULTILINE)
                 yield parse_json(json_text)
@@ -451,7 +453,40 @@ class AssistantCotApplicationRunner(BaseAssistantApplicationRunner):
                 continue
 
         return instruction
-        
+    
+    def _init_agent_scratchpad(self, 
+                               agent_scratchpad: list[AgentScratchpadUnit],
+                               messages: list[PromptMessage]
+                               ) -> list[AgentScratchpadUnit]:
+        """
+        init agent scratchpad
+        """
+        current_scratchpad: AgentScratchpadUnit = None
+        for message in messages:
+            if isinstance(message, AssistantPromptMessage):
+                current_scratchpad = AgentScratchpadUnit(
+                    agent_response=message.content,
+                    thought=message.content,
+                    action_str='',
+                    action=None,
+                    observation=None
+                )
+                if message.tool_calls:
+                    try:
+                        current_scratchpad.action = AgentScratchpadUnit.Action(
+                            action_name=message.tool_calls[0].function.name,
+                            action_input=json.loads(message.tool_calls[0].function.arguments)
+                        )
+                    except:
+                        pass
+                    
+                agent_scratchpad.append(current_scratchpad)
+            elif isinstance(message, ToolPromptMessage):
+                if current_scratchpad:
+                    current_scratchpad.observation = message.content
+
+        return agent_scratchpad
+
     def _check_cot_prompt_messages(self, mode: Literal["completion", "chat"], 
                                       agent_prompt_message: AgentPromptEntity,
     ):

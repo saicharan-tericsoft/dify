@@ -204,7 +204,7 @@ class LargeLanguageModel(AIModel):
         :return: full response or stream response chunk generator result
         """
         raise NotImplementedError
-
+    
     @abstractmethod
     def get_num_tokens(self, model: str, credentials: dict, prompt_messages: list[PromptMessage],
                        tools: Optional[list[PromptMessageTool]] = None) -> int:
